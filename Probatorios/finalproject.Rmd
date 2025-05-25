@@ -1,0 +1,455 @@
+---
+title: "Analisis exploratorio: violencia criminal y trasiego de drogas"
+subtitle: 'MIDE: DIPLOMADO EN CIENCIA DE DATOS'
+author: "Karla Cruz Martínez"
+institution: "MUSEO INTERACTIVO DE ECONOMÍA"
+date: "`r Sys.Date()`"
+output:
+ html_document: default
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+[karlacruzmartinez92\@gmail.com](mailto:karlacruzmartinez92@gmail.com)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE, error=FALSE, message=FALSE}
+
+rm(list = ls())
+
+library(htmltools)
+library(htmlwidgets)
+library(AER)
+library(plm)
+library(CGPfunctions)
+library(foreign)
+library(gplots)
+library(haven)
+library(dplyr)        # wickham2020b
+library(DT)           # xie2020
+library(ggplot2)      # wickham2016
+library(Hmisc)        # harrell2020
+library(kableExtra)   # zhu2021
+library(knitr)        # xie2014
+library(RColorBrewer) # neuwirth2014
+library(reshape2)     # wickham2007
+library(scales)  
+library(readxl)
+library(GGally)
+library(Hmisc)
+library(corrplot)
+library(PerformanceAnalytics)# wickham2020
+
+```
+
+# INTRODUCCIÓN
+
+Actualmente México vive una ola de violencia. De acuerdo con algunos
+especialista, esto tiene relación con la presencia de grupos criminales
+y las políticas pública ejercida contra los mismos. Bajo este panorama,
+se pretende responder a ¿cómo es el comportamiento del crimen en México?
+¿Los homicidios tienen un comportamiento generalizado en todo el país?
+¿Cuáles son las áreas geográficas con mayores tasas de homicidios por
+armas de fuego? ¿Cómo han variado las tasas de homicidios a lo largo del
+tiempo entre hombres y mujeres? ¿Existe una relación entre el trasiego
+de drogas y los homicidios a nivel entidad federativa?
+
+# ESTABLECER EL CONTEXTO
+
+Las actividades del crimen organizado tienen un impacto significativo en
+las comunidades y en los países, lo que ha llevado a diversos estados a
+combatirlo. Una de estas actividades es el mercado de drogas ilegales,
+el cual se encuentra en manos de organizaciones criminales desde su
+surgimiento a mitad del siglo XIX, ya que hay en juego prolíferos
+dividendos. En 2017, Global Financial Integrity estimó las ganancias
+totales anuales de once mercados delcrimen organizado, siendo el mercado
+de sustancias psicoactivas el segundo más lucrativo. Las ganancias
+calculadas oscilaron entre 426 mil millones y 652 mil millones de
+dólares anuales. Algunas de las razones por las cuales se origina dicho
+mercado de drogas ilegales, como coloquialmente se conoce, es la alta
+demanda de los países desarrollados y las limitadas condiciones
+socioeconómicas en los países productores, en donde hay un dominio de
+las organizaciones criminales. En 2017, el consumo de drogas aumentó 30
+% con respecto al 2009. En especial incrementó el consumo de opioides,
+sustancias que derivan del jugo de la amapola o adormidera Papaver
+somniferum. El consumo de estas sustancias creció 56 % respecto al 2016;
+la heroína y el opio fueron las drogas más usadas. Aunado a esto, en las
+últimas dos décadas, la producción a gran escala de cultivos de amapola
+ha estado en ascenso en los principales países productores como son:
+Afganistán, Myanmar y México4 según United Nations Office on Drugs and
+Crime (UNODC) (2019). En el caso de México, entre 2015 y 2017, se
+registró una expansión del cultivo de amapola del 21 % en diversas zonas
+del país, de acuerdo con las cifras que presentó UNODC en 2018. Esta
+expansión podría estár relacionada con la alta demanda de opioides5 por
+Estados Unidos. Evans W., Lieber, E. y Power, P. (2019), documentan que,
+en 2010, Estados Unidos reportó un incremento de muertes por sobredosis
+de heroína como consecuencia de la reformulación de OxyContin , la cual
+buscaba evitar el abuso de opioides recetados. Por un lado, esta medida
+bien intencionada condujo a una serie de efectos adversos como fue el
+abuso de drogas ilegales,como la heroína. Y por el otro, un incremento
+en la violencia por la couta del mercado de la heroína entre las
+organizaciones criminales, como establece Sobrino, F. (2019), en México.
+
+## DATOS
+
+Se construyó un panel de datos a nivel municipal, que para efectos de
+este trabajo se realizó el análisis exploratorio a nivel entidad
+federativa. Los datos son públicos: -Defunciones, los cuales fueron
+extraídos de lo Registros Administrativos del Instituto Nacional de
+Estadística y Geografía. -Incautaciones, son parte del México Unido
+contra la Delincuencia. -Precios internacionales de la droga, son de
+UNODC.
+
+```{r echo=TRUE}
+rm(list = ls())
+
+## Directorio de trabajo
+
+setwd("/Users/karlacruz/Desktop/final_project/data_bases/result")
+
+base <-read_dta("finaldataENT.dta")
+#modelo <-read_dta("finaldataMUN.dta")
+
+
+head(base)
+
+```
+
+```{r echo=TRUE}
+summary(base)
+attach(base)
+
+```
+
+```{r echo=TRUE}
+
+h1 <- ggplot(base, aes(x=homicr))
+h1 + geom_histogram()
+
+h2 <- ggplot(base, aes(log(x=homicr)))
+h2 + geom_histogram()
+
+
+h3 <- ggplot(base, aes(x=homiguns_r))
+h3 + geom_histogram()
+
+h4<- ggplot(base, aes(log(x=homiguns_r)))
+h4 + geom_histogram()
+
+
+h5<- ggplot(base, aes(x=heroin_average_wholesale))
+h5 + geom_histogram()
+
+h6<- ggplot(base, aes(log(x=heroin_average_wholesale)))
+h6 + geom_histogram()
+
+
+h7<- ggplot(base, aes(x=inheroin))
+h7 + geom_histogram()
+
+h8<- ggplot(base, aes(log(x=inheroin)))
+h8 + geom_histogram()
+
+```
+
+Correlación entre las variables de interés númericas
+
+```{r echo=TRUE}
+
+
+plot(inheroin, homicr , pch = 19, col = "lightblue")
+abline(lm(inheroin ~ homicr), col = "red", lwd = 3)
+
+text(paste("Correlación:", round(cor(inheroin, homicr), 2)), x = 50, y = 50)
+
+plot(inheroin, homiguns_r , pch = 19, col = "lightblue")
+abline(lm(inheroin ~ homiguns_r), col = "red", lwd = 3)
+
+text(paste("Correlación:", round(cor(inheroin, homiguns_r), 2)), x = 50, y = 50)
+
+plot(heroin_average_wholesale*inheroin, homicr , pch = 19, col = "lightblue")
+abline(lm(heroin_average_wholesale*inheroin ~ homicr), col = "red", lwd = 3)
+
+text(paste("Correlación:", round(cor(heroin_average_wholesale*inheroin, homicr), 2)), x = 100, y = 100)
+
+```
+
+## Análisis exploratorio de las variables de interés
+
+```{r}
+ggplot(base, aes(x = anio_ocur, y = homicr)) +
+ geom_point(fill = rgb(0, 0.5, 1, alpha = 1)) + 
+  labs(title = "Tasa de Homicidios en México",
+       subtitle = "1990-2022",
+       caption = "El calculo responde al total de homicidios ocurridos por armas de fuego durante el año t, entre la población total durante el año t por cien mil habitantes",
+       tag = "Fig. 1")+
+theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0)) 
+```
+
+La violencia a través de los homicidios incrementa a partir de 1997,
+¿qué sucedió en esos años?
+
+```{r}
+
+ggplot(base, aes(x = anio_ocur, y =homicr , color = cve_ent)) +
+  geom_area(show.legend = FALSE) +
+  facet_wrap(~nom_ent , scales = "free") +
+  theme(strip.text = element_text(size = 6),
+        strip.background = element_blank()) +
+  labs(title = "Tasa de Homicidios por entidad federativa",
+       subtitle = "1990-2022",
+       caption = "El cálculo responde al total de homicidios ocurridos por armas de fuego durante el año t, entre la población total durante el año t por cien mil habitantes",
+       tag = "Fig. 2")+
+theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0)) 
+
+```
+
+Los niveles de violencia se generalizo en las entidades federativas,
+claramente un otras con mayor intensidad. Los homicidios responden en la
+entidad ocurrida NO en la registrada.
+
+```{r}
+str(base)
+```
+
+```{r}
+
+summary(object = base)
+
+```
+
+```{r}
+
+dim(base)
+```
+
+Se construyó una base de 97 variables.
+
+```{r}
+newggslopegraph(base, year, hwomenr, nom_ent,
+                Title = "Evolución de tasa de homicidios por cada cien mil mujeres",
+                SubTitle = "Entidad Federativas, 1990-2022",
+                Caption = "R CHARTS",
+                XTextSize = 7,    # Tamaño textos eje X
+                YTextSize = 3,     # Tamaño grupos
+                TitleTextSize = 7,    # Tamaño título
+                SubTitleTextSize = 6, # Tamaño subtítulo
+                CaptionTextSize = 7,  # Tamaño caption
+                TitleJustify = "right",    # Justificado título
+                SubTitleJustify = "right", # Justificado subtítulo
+                CaptionJustify = "left",   # Justificado caption
+                DataTextSize = 1) # Tamaño de los valores
+```
+
+```{r}
+newggslopegraph(base, year, hgunswomr, nom_ent,
+                Title = "Evolución de tasa de homicidios por cada cien mil mujeres con armas de fuego",
+                SubTitle = "Entidad Federativas, 1990-2022",
+                Caption = "R CHARTS",
+                XTextSize = 7,    # Tamaño textos eje X
+                YTextSize = 3,     # Tamaño grupos
+                TitleTextSize = 7,    # Tamaño título
+                SubTitleTextSize = 6, # Tamaño subtítulo
+                CaptionTextSize = 7,  # Tamaño caption
+                TitleJustify = "right",    # Justificado título
+                SubTitleJustify = "right", # Justificado subtítulo
+                CaptionJustify = "left",   # Justificado caption
+                DataTextSize = 1) # Tamaño de los valores
+```
+
+```{r}
+newggslopegraph(base, year, hmenr, nom_ent,
+                Title = "Evolución de tasa de homicidios por cada cien mil hombres",
+                SubTitle = "Entidad Federativas, 1990-2022",
+                Caption = "R CHARTS",
+                XTextSize = 7,    # Tamaño textos eje X
+                YTextSize = 3,     # Tamaño grupos
+                TitleTextSize = 7,    # Tamaño título
+                SubTitleTextSize = 6, # Tamaño subtítulo
+                CaptionTextSize = 7,  # Tamaño caption
+                TitleJustify = "right",    # Justificado título
+                SubTitleJustify = "right", # Justificado subtítulo
+                CaptionJustify = "left",   # Justificado caption
+                DataTextSize = 1) # Tamaño de los valores
+```
+
+```{r}
+newggslopegraph(base, year, hgunsmenr, nom_ent,
+                Title = "Evolución de tasa de homicidios por cada cien mil hombres con armas de fuego",
+                SubTitle = "Entidad Federativas, 1990-2022",
+                Caption = "R CHARTS",
+                XTextSize = 7,    # Tamaño textos eje X
+                YTextSize = 3,     # Tamaño grupos
+                TitleTextSize = 7,    # Tamaño título
+                SubTitleTextSize = 6, # Tamaño subtítulo
+                CaptionTextSize = 7,  # Tamaño caption
+                TitleJustify = "right",    # Justificado título
+                SubTitleJustify = "right", # Justificado subtítulo
+                CaptionJustify = "left",   # Justificado caption
+                DataTextSize = 1) # Tamaño de los valores
+```
+
+Precios de drogas
+
+```{r}
+
+ggplot(base, aes(x =anio_ocur, y =heroin_average_wholesale)) +
+  geom_area(alpha = 0.5)+
+labs(title = "Precios de heroina por mayoreo en Estados Unidos de América",
+       subtitle = "1990-2021",
+       caption = "Los datos pueden ser consultados en https://dataunodc.un.org/dp-drug-prices",
+       tag = "Fig. 4")+
+theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0)) 
+```
+
+```{r}
+
+ggplot(base, aes(x =anio_ocur, y =cocaine_average_wholesale)) +
+  geom_area(alpha = 0.5)+
+labs(title = "Precios de Cocaina por mayoreo en Estados Unidos de América",
+       subtitle = "1990-2021",
+       caption = "Los datos pueden ser consultados en https://dataunodc.un.org/dp-drug-prices",
+       tag = "Fig. 4")+
+theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0)) 
+```
+
+Incautaciones en México
+
+```{r}
+         
+ggplot(base, aes(x = anio_ocur, y =incocaina , color = cve_ent)) +
+  geom_area(show.legend = FALSE) +
+  facet_wrap(~nom_ent , scales = "free") +
+  theme(strip.text = element_text(size = 6),
+        strip.background = element_blank()) +
+  labs(title = "Kilogramos de cocaina incautados por entidad federativa",
+       subtitle = "1990-2022",
+       caption = "",
+       tag = "Fig. 8")+
+theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0)) 
+```
+
+```{r}
+         
+ggplot(base, aes(x = anio_ocur, y =inheroin , color = cve_ent)) +
+  geom_area(show.legend = FALSE) +
+  facet_wrap(~nom_ent , scales = "free") +
+  theme(strip.text = element_text(size = 6),
+        strip.background = element_blank()) +
+  labs(title = "Kilogramos de heroina incautados por entidad federativa",
+       subtitle = "1990-2022",
+       caption = "",
+       tag = "Fig. 8")+
+theme(plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0)) 
+```
+
+##Método
+
+Para efectos de esta investigación se realizo un modelo de panel de
+datos con efectos fijos y aleatorio (Sin logaritmos)
+
+
+```{r}
+
+modelo_pool <- plm(homiguns_r ~ carte_trasiegoH*heroin_average_wholesale, data=base, model="pooling")
+summary(modelo_pool)
+```
+
+```{r}
+modelo_fe <- plm(homiguns_r ~ carte_trasiegoH*heroin_average_wholesale, data=base, model="within")
+summary(modelo_fe)
+```
+
+```{r}
+
+pFtest(modelo_fe, modelo_pool)
+```
+
+Para un modelo con efectos aleatorios
+
+```{r}
+
+wallace<- plm(homicr ~ carte_trasiegoH*heroin_average_wholesale, data=base, model="random", random.method = "walhus" )
+summary(wallace)
+```
+
+```{r}
+
+ame<- plm(homicr ~ carte_trasiegoH*heroin_average_wholesale, data=base, model="random", random.method = "amemiya" )
+summary(ame)
+```
+
+```{r}
+
+ner<- plm(homicr ~ carte_trasiegoH*heroin_average_wholesale, data=base, model="random", random.method = "nerlove" )
+summary(wallace)
+```
+
+```{r}
+
+phtest(wallace, modelo_fe)
+phtest(ner, modelo_fe)
+phtest(ame, modelo_fe)
+
+```
+
+##COMENTARIOS FINALES
+
+-Los niveles de violencia han incrementado durante 1997.
+
+-La tasa de homicidios máxima es 197 homicidios por cada cien mil
+habitantes. La media responde14 homicidios.
+
+Datos diferenciados:
+
+-La tasa de homicidios de los hombres durante 1990-2022 oscila en 347
+homicidios por cada cien mil habitantes. La media es 25 homicidios.
+
+-Para el caso diferenciado de las mujeres, tasa máxima es 47 homicidios
+por cada cien mi mujeres habitantes. Mientras su media es 3 homicidios.
+
+-Precio de droga varia durante el tiempo. Anteriormente, el precio era mayor.
+
+-El valor máximo de la heroína 162,500 dls sin ajustarse a la inflación 
+
+-Existe débil correlación minima entre homicidios y la presencia de drogas. 
+-Se realizó una serie de modelos con efectos fijos y aleatorios para conocer la relación entre variables; sin embargo, no se ahondo en el análisis de coeficientes.
+
+
+
+## REFERENCIAS
+
+[1] Angrist, J. D. and Kugler, A. D. (2008). Rural Windfall or a New
+Resource Curse? Coca, Income, and Civil Conflict in Colombia. The Review
+of Economics and Statistics 90(2), 191-215. [2] Acemoglu, D., De Feo,
+G., and De Luca, G. D. (2020).Weak states: Causes and consequences of
+the Sicilian Mafia . The Review of Economic Studies, 87(2), 537- 581.
+[3] Astorga, L. (2005). El Siglo de las Drogas. México: Plaza y Janés.
+[4] Bejarano, R. (2018). Competencia electoral, redes de protección y
+violencia del crimen organizado en México. 2006-2016. [5] Biderman, C.,
+Mello, J. M., De Lima, R. S. D. and Schneider, A. (2018). Pax
+Monopolista and Crime: The Case of the Emergence of the Primeiro Comando
+da Capital in São Paulo. Journal of Quantitative Criminology 35(3),
+573-605. [6] Bounadi, M. E. (2018). Weather and Conflicts in
+Afghanistan. EBA Working Paper, Expert Group for Aid Studies, Sweden.
+[7] Brown, R. H. (2002). The Opium Trade and Opium Policies in India,
+China, Britain, and the United States: Historical Comparisons and
+Theoretical Interpretations. Asian Journal of Social Science, Vol. 30,
+No. 3, pp. 623-656. [8] DEA (2019). 2019 National Drug Threat
+Assessment, Technical Report. U.S. Department of Justice Drug
+Enforcement Administration. [9] De Sagrera, J. E. (2005). El opio.
+Elservier.Vol.24. Núm.10. pp. 77-110. [10] Coscia, M. and Rios, V.
+(2012). Knowing where and how Criminal Organizations Operate using Web
+Content, Proceedings of the 21st ACM international conference on
+Information and knowledge management. pp. 1412-1421.
