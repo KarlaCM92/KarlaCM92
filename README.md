@@ -1,4 +1,4 @@
-- 👋 Hi, I’m @KarlaCM92
+- 👋 Hi, I’m Karla Cruz
 - 👀 I’m interested in creating social impact through data
 - 💞️ I’m looking to collaborate on social projects about human rights
 - 🏊🏻‍♀️ I love workout
