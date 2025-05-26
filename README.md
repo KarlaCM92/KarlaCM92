@@ -12,7 +12,8 @@
     - ​​Monitoring compliance with human rights in the judiciary
     - Designing a statistical guide to collect data on international labor migration and linking it to migration policies, for IOM Mexico.
     - Evaluation of gender, inclusion, and diversity policy in the judiciary.
-    - To test my knowledge of Python, Stata, and R, you can check out the "Evidence" section, where I showed some examples of my code.
+    - To test my knowledge of Python, Stata, and R, you can check out the "Probatorios" section, where I showed some examples of my code.
+      the link : https://github.com/KarlaCM92/KarlaCM92/tree/a8a34b3925db420cdbeccd4476e272a29b7d70e8/Probatorios 
 
 <!---
 KarlaCM92/KarlaCM92 is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
